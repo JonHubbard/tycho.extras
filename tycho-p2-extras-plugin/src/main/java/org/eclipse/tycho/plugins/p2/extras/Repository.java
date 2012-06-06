@@ -11,6 +11,7 @@
 package org.eclipse.tycho.plugins.p2.extras;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 public final class Repository {
 
@@ -46,6 +47,12 @@ public final class Repository {
 
     private URI url;
 
+    /*
+     * Switches Windows file.separator to Unix style, useful when using file:/ URI and maven
+     * properties such as ${project.build.directory} on Windows
+     */
+    private String stringUrl;
+
     private Layout layout = Layout.BOTH;
 
     public Repository() {
@@ -59,6 +66,12 @@ public final class Repository {
      * @return never <code>null</code>
      */
     public URI getLocation() {
+        if (stringUrl != null && url == null)
+            try {
+                url = new URI(stringUrl.replace('\\', '/'));
+            } catch (URISyntaxException e) {
+                throw new IllegalStateException("Attribute 'stringUrl' could not be parsede", e);
+            }
         if (url == null)
             throw new IllegalStateException("Attribute 'url' is required for source repositories");
         return url;
